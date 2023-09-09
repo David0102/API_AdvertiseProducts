@@ -7,7 +7,6 @@ from src.models.user import User
 from src.providers.token_provider import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
-
 class UserController():
 
     def __init__(self, db: Session):
