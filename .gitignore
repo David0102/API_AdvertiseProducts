@@ -1,5 +1,5 @@
-venv/
 alembic.ini
 staticfiles/
 .env
 __pycache__
+venv/
