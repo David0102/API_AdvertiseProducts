@@ -1,5 +1,14 @@
+#alembic
 alembic.ini
+
+#staticfiles
 staticfiles/
+
+#Environments
+*.pyc
 .env
-__pycache__/
 venv/
+
+#Executation
+__pycache__/
+*.log
