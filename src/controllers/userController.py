@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
-import uuid
+import uuid, os
 from src.models.user import User
 from src.providers.hash_provider import gerar_hash, verify_hash
 from src.models.user import User
@@ -17,7 +17,10 @@ class UserController():
         self.email_verify(email, 'singup')
         self.contact_verify(contact)
         password = gerar_hash(password)
-        image_url = self.image_save(image)
+        if image:
+            image_url = self.image_save(image)
+        else:
+            image_url = None
 
         user = User(
             name = name,
@@ -35,10 +38,47 @@ class UserController():
 
         password = verify_hash(login_data.password, user.password)
         if not password:
-            raise HTTPException(status_code=400, detail='Password inválido!')
+            raise HTTPException(status_code=400, detail='Senha inválida!')
         
         token = create_access_token({'sub': user.email})
-        return {'user': user, 'token': token}
+        return token
+    
+    def update_image(self, image: UploadFile, user: User):
+
+        if user.image_url:
+            img = os.path.basename(user.image_url)
+            os.remove(f"staticfiles/users/{img}")
+
+        if image:
+            image_url = self.image_save(image)
+        else:
+            image_url = None
+        
+        user.image_url = image_url
+
+        user_update = self.save_user(user)
+        return user_update.image_url
+    
+    def update_password(self, user: User, password: str):
+        password_verify = verify_hash(password, user.password)
+        if password_verify:
+            raise HTTPException(status_code=400, detail="A nova senha deve ser diferente da senha antiga!")
+        
+        new_password = gerar_hash(password)
+
+        user.password = new_password
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+
+    def delete_account(self, user: User):
+        user_delete = self.db.query(User).get(user.id)
+        self.db.delete(user_delete)
+        self.db.commit()
+
+        if user.image_url:
+            img = os.path.basename(user.image_url)
+            os.remove(f"staticfiles/users/{img}")
 
     def image_save(self, image: UploadFile):
         image.filename = f"{uuid.uuid4()}.png"
