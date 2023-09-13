@@ -7,20 +7,16 @@ from src.models.user import User
 from src.providers.token_provider import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
-class UserController():
-
+class UserController:
     def __init__(self, db: Session):
         self.db = db
 
     def singup(self, name: str, email: str, contact: str, password: str, image: UploadFile):
-        
         self.email_verify(email, 'singup')
         self.contact_verify(contact)
         password = gerar_hash(password)
-        if image:
-            image_url = self.image_save(image)
-        else:
-            image_url = None
+
+        image_url = self.image_save(image) if image else None
 
         user = User(
             name = name,
@@ -44,15 +40,11 @@ class UserController():
         return token
     
     def update_image(self, image: UploadFile, user: User):
-
         if user.image_url:
             img = os.path.basename(user.image_url)
             os.remove(f"staticfiles/users/{img}")
 
-        if image:
-            image_url = self.image_save(image)
-        else:
-            image_url = None
+        image_url = self.image_save(image) if image else None
         
         user.image_url = image_url
 
@@ -67,9 +59,7 @@ class UserController():
         new_password = gerar_hash(password)
 
         user.password = new_password
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+        self.save_user(user)
 
     def delete_account(self, user: User):
         user_delete = self.db.query(User).get(user.id)
