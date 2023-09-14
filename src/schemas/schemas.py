@@ -22,7 +22,7 @@ class ProductSchemaResponse(BaseModel):
     price: float
     image_url: Optional[str] = None
     usuario: UserSchemaResponse
-    category: CategorySchemaResponse
+    category: Optional[CategorySchemaResponse] = None
 
     class Config:
         orm_mode: True
